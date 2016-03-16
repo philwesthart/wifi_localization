@@ -31,6 +31,8 @@ def initialize_map():
     
 
 def scan_for_wifi():
+    found_signals = {}
+    ap_names = []
     print "Scanning for wifi..."
     out = subprocess.check_output(['sudo', './wavemon/wavemon'])
     out = out.split("\n")
@@ -48,6 +50,18 @@ def scan_for_wifi():
     print i, "access points found"
 
 def convert_db_to_m(dB):
+    print "signal strength:" , dB
+    #FSPL = 10*log(((4*pi*d*f)/c)**2)
+    orig_strength = 20 #original signal strength in dB
+    FSPL_dB = orig_strength - float(dB) + 30
+    
+    c = 2.9979e8 #m/s
+    f = 2437 #MHz. assume channel 6
+    k = -27.55
+    d = 10**((FSPL_dB - 20*math.log(f,10) - k)/20)
+    #FSPL = 10**(FSPL_dB/10)
+    #d = (FSPL**0.5)*c/(4*np.pi*f)
+    print "distance" , d , "m"
     return 2.5
 
 def update_map():
