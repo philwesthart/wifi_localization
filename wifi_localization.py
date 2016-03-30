@@ -31,6 +31,7 @@ def initialize_map():
     
 
 def scan_for_wifi():
+    global ap_names, found_signals
     found_signals = {}
     ap_names = []
     print "Scanning for wifi..."
@@ -48,27 +49,41 @@ def scan_for_wifi():
             found_signals[ap_name] = signal_strength
 
     print i, "access points found"
+    print "ap_names", ap_names
 
 def convert_db_to_m(dB):
-    print "signal strength:" , dB
     #FSPL = 10*log(((4*pi*d*f)/c)**2)
-    orig_strength = 20 #original signal strength in dB
-    FSPL_dB = orig_strength - float(dB) + 30
+    orig_strength = 20 #original signal strength in dBm
+    FSPL = orig_strength - float(dB) 
     
     c = 2.9979e8 #m/s
     f = 2437 #MHz. assume channel 6
     k = -27.55
-    d = 10**((FSPL_dB - 20*math.log(f,10) - k)/20)
+    d = 10**((FSPL - 20*math.log(f,10) - k)/20)
+
+    print "distance" , d , "m"
+
+#########
     #FSPL = 10**(FSPL_dB/10)
     #d = (FSPL**0.5)*c/(4*np.pi*f)
+
+############
+    #FSPL = 20log(d) + 20log(f) - 27.55 (d in meters, f in MHz)
+    FSPL = 20 - float(dB)
+    d = 10**((FSPL - 20*math.log(f, 10) + 27.55)/20)
+
+
     print "distance" , d , "m"
     return 2.5
 
 def update_map():
     dist = 2.5
+    global ap_names, found_signals
+    print "Updating map..."
     for ap in ap_names:
         for t_ap in target_aps:
             if ap == t_ap['ap_name']:
+                print "Found access point " , ap , " with signal strength ", found_signals[ap], "dBm"
                 dist = convert_db_to_m(found_signals[ap])
                 for x in np.arange(-(MAX_DIST_FROM_ORIG), MAX_DIST_FROM_ORIG,CELL_WIDTH):
                     for y in np.arange(-(MAX_DIST_FROM_ORIG), MAX_DIST_FROM_ORIG,CELL_WIDTH):
